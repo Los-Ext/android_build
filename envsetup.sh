@@ -1249,6 +1249,29 @@ if [[ "$USE_LEFTOVERS" -eq 1 ]]; then
   leftovers
 fi
 
+function setup_ccache() {
+    CCACHE_EXEC=$(command -v ccache)
+
+    if [ -z "$CCACHE_EXEC" ]; then
+        echo "Error: ccache not found. Please install ccache." >&2
+        return 1
+    fi
+
+    export CCACHE_EXEC
+    export USE_CCACHE=1
+    export CCACHE_DIR="$(gettop)/.ccache"
+    export CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-40G}"
+
+    "$CCACHE_EXEC" -M "$CCACHE_MAXSIZE" -o compression=true
+
+    if [ -d "$CCACHE_DIR" ]; then
+        echo -e "ccache directory: $CCACHE_DIR" >&2
+        echo -e "ccache size: $(du -sh "$CCACHE_DIR" 2>/dev/null | awk '{print $1}')" >&2
+    fi
+}
+
+setup_ccache
+
 export ANDROID_BUILD_TOP=$(gettop)
 
 . $ANDROID_BUILD_TOP/vendor/lineage/build/envsetup.sh
